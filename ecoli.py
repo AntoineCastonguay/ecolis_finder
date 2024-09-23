@@ -15,8 +15,8 @@ __version__ = '0.1'
 class ecoli(object):
     def __init__(self, args):
         # I/O
-        #self.input = os.path.abspath(args.input)
-        #self.output_folder = os.path.abspath(args.output)
+        self.input = os.path.abspath(args.input)
+        self.output_folder = os.path.abspath(args.output)
         self.ref_genome = args.genome
 
         # Run
