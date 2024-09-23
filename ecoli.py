@@ -19,11 +19,6 @@ class ecoli(object):
         self.output_folder = os.path.abspath(args.output)
         self.ref_genome = args.genome
 
-        # Performance
-        self.cpu = args.threads
-        self.parallel = args.parallel
-        self.mem = args.memory
-
         # Run
         self.run()
 
@@ -85,9 +80,6 @@ class ecoli(object):
 
 
 if __name__ == "__main__":
-    max_cpu = cpu_count()
-    max_mem = int(virtual_memory().total * 0.85 / 1000000000)  # in GB
-
     parser = ArgumentParser(description='Extract, assemble and compare Nanopore reads matching a reference sequence.')
     parser.add_argument('-g', '--genome', metavar='/path/to/reference_organelle/genome.fasta',
                         required=True,
