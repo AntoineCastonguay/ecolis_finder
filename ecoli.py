@@ -5,20 +5,14 @@ import warnings
 from argparse import ArgumentParser
 from multiprocessing import cpu_count
 from psutil import virtual_memory
-from ecoli_methods import Methods
+from ecoli_methode import Methods
 
 
 __author__ = 'castonguaya'
 __version__ = '0.1'
 
 
-#  Requirements
-"""
-conda create -n ecoli -y -c bioconda -c etetoolkit -c hcc -c conda-forge samtools=1.16 bcftools=1.16 git ete3=3.1.2 psutil=5.9.4 pandas=1.5.3 rebaler=0.2.0 perl-bioperl=1.7.8 perl=5.32.1
-"""
-
-
-class Bacon(object):
+class ecoli(object):
     def __init__(self, args):
         # I/O
         self.input = os.path.abspath(args.input)
@@ -110,4 +104,4 @@ if __name__ == "__main__":
     # Get the arguments into an object
     arguments = parser.parse_args()
 
-    Bacon(arguments)
+    ecoli(arguments)
