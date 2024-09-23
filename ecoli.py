@@ -15,8 +15,8 @@ __version__ = '0.1'
 class ecoli(object):
     def __init__(self, args):
         # I/O
-        self.input = os.path.abspath(args.input)
-        self.output_folder = os.path.abspath(args.output)
+        #self.input = os.path.abspath(args.input)
+        #self.output_folder = os.path.abspath(args.output)
         self.ref_genome = args.genome
 
         # Run
@@ -24,10 +24,6 @@ class ecoli(object):
 
     def run(self):
         print('Checking a few things...')
-
-        # Check if number of CPU and memory requested are valid
-        self.cpu, self.parallel = Methods.check_cpus(self.cpu, self.parallel)
-        self.mem = Methods.check_mem(self.mem)
 
         # Check input file compatibility
         Methods.check_input(self.input)
