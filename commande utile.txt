@@ -1,0 +1,11 @@
+## commande utile
+
+# lancer un executable
+chmod +x *.sh
+sudo ./*.sh
+
+sudo bash *.sh
+
+python3 ecolis_finder/ecoli.py -g GCF_000005845.2_ASM584v2_genomic.fasta -i primer.fasta -o ~/Documents/output/
+conda install -c bioconda -c conda-forge pysam
+conda install psutil
