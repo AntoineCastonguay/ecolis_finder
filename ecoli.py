@@ -1,10 +1,5 @@
-import glob
 import os
-import sys
-import warnings
 from argparse import ArgumentParser
-from multiprocessing import cpu_count
-from psutil import virtual_memory
 from ecoli_methode import Methods
 
 
@@ -12,42 +7,25 @@ __author__ = 'castonguaya'
 __version__ = '0.1'
 
 
-class ecoli(object):
+class Ecoli(object):
     def __init__(self, args):
         # I/O
         self.input = os.path.abspath(args.input)
         self.output_folder = os.path.abspath(args.output)
         self.ref_genome = args.genome
-
-        # Run
         self.run()
 
     def run(self):
         print('Checking a few things...')
-
-        # Check input file compatibility
         Methods.check_input(self.input)
 
-        ############################################################
+        done_extract = self.output_folder + '/done_extract'
+        done_result = self.output_folder + '/done_result'
+        extract_folder = os.path.join(self.output_folder, '1_extract')
+        result_folder = os.path.join(self.output_folder, '2_result')
 
-        # Step completion report files
-        done_extract = self.done_extract + '/done_extract'
-        done_result = self.done_extract + '/done_result'
-
-        # Output folders to create
-        extract_folder = self.output_folder + '/1_extract/'
-        result_folder = self.output_folder + '/2_result/'
-
-        # Create output folder
         Methods.make_folder(self.output_folder)
-
         print('\tAll good!')
-
-        ##################
-        #
-        # 1- Position primer
-        #
-        ##################
 
         if not os.path.exists(done_extract):
             print('test1...')
@@ -56,14 +34,7 @@ class ecoli(object):
         else:
             print('Skipping extract. Already done.')
 
-        # Update sample_dict after extracting
-        self.position_genome = Methods.get_files(extract_folder)
-
-        ##################
-        #
-        # 2- result position
-        #
-        ##################
+        #self.position_genome = Methods.get_files(extract_folder)
 
         if not os.path.exists(done_result):
             print('test2...')
@@ -74,22 +45,12 @@ class ecoli(object):
 
         print('DONE!')
 
-
 if __name__ == "__main__":
     parser = ArgumentParser(description='Extract, assemble and compare Nanopore reads matching a reference sequence.')
-    parser.add_argument('-g', '--genome', metavar='/path/to/reference_organelle/genome.fasta',
-                        required=True,
-                        help='Reference genome for primer mapping. Mandatory.')
-    parser.add_argument('-i', '--input', metavar='/path/to/input/folder/ or /path/to/my_fasta',
-                        required=True,
-                        help='Folder that contains the fasta files or individual fasta file. Mandatory.')
-    parser.add_argument('-o', '--output', metavar='/path/to/output/folder/',
-                        required=True,
-                        help='Folder to hold the result files. Mandatory.')
-    parser.add_argument('-v', '--version', action='version',
-                        version=f'{os.path.basename(__file__)}: version {__version__}')
-
-    # Get the arguments into an object
+    parser.add_argument('-g', '--genome', required=True, help='Reference genome for primer mapping. Mandatory.')
+    parser.add_argument('-i', '--input', required=True, help='Folder that contains the fasta files or individual fasta file. Mandatory.')
+    parser.add_argument('-o', '--output', required=True, help='Folder to hold the result files. Mandatory.')
+    parser.add_argument('-v', '--version', action='version', version=f'{os.path.basename(__file__)}: version {__version__}')
+    
     arguments = parser.parse_args()
-
-    ecoli(arguments)
+    Ecoli(arguments)

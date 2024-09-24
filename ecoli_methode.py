@@ -8,13 +8,9 @@ from psutil import virtual_memory
 from multiprocessing import cpu_count
 import gzip
 from itertools import groupby
-from ete3 import Tree, TreeStyle
-from ete3.parser.newick import NewickError
 from glob import glob
 import pysam
 import warnings
-import pandas as pd
-import io
 
 
 class Methods(object):
