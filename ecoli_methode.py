@@ -46,7 +46,7 @@ class Methods(object):
 
         with gzip.open(ref, 'rt') if ref.endswith('.gz') else open(ref, 'r') as f:
             first_header = f.readline()
-            first_character = split(first_header)[0]
+            first_character = first_header[0]
             if first_character != '>':
                 raise Exception('The reference file provided does not appear to be a valid fasta file.')
 
@@ -105,36 +105,17 @@ class Methods(object):
             stderr, stdout = p.communicate()
 
     @staticmethod
-    def test1():
-        print('test1 win!')
-
-    @staticmethod
-    def test2():
-        print('test1 win!')
-
-    @staticmethod
     def make_folder(folder):
         # Will create parent directories if don't exist and will not return error if already exists
         pathlib.Path(folder).mkdir(parents=True, exist_ok=True)
-
+    
     @staticmethod
-    def get_files(in_folder):
-        sample_dict = dict()
-
-        # Look for input sequence files recursively
-        for root, directories, filenames in os.walk(in_folder):
-            for filename in filenames:
-                if filename.endswith(tuple(Methods.accepted_extensions)):  # accept a tuple or string
-                    file_path = os.path.join(root, filename)
-                    file_path = os.path.realpath(file_path)  # follow symbolic links
-                    sample = filename.split('.')[0].replace('_pass', '').replace('_filtered', '')
-                    if filename.endswith('gz'):
-                        sample = sample.split('.')[0]
-                    sample_dict[sample] = file_path
-        if not sample_dict:
-            raise Exception('Sample dictionary empty!')
-
-        return sample_dict
+    def find_sam_files(folder):
+        sam_files = []
+        for filename in os.listdir(folder):
+            if filename.endswith('.sam'):
+                sam_files.append(os.path.join(folder, filename))
+        return sam_files
 
     @staticmethod
     def list_to_file(my_list, output_file):
@@ -150,108 +131,59 @@ class Methods(object):
     def flag_done(flag_file):
         with open(flag_file, 'w') as f:
             pass
+        
+    @staticmethod
+    def minimap2(genome, primer, output):
+        print('minimap2 processing...')
+
+        Methods.make_folder(output)
+
+        # Prépare la commande sans redirection et sans shlex
+        minimap_cmd = ['minimap2', '-ax', 'map-ont', genome, primer]
+
+        # Redirection de la sortie vers un fichier
+        with open(f'{output}/output.sam', 'w') as outfile:
+            subprocess.run(minimap_cmd, stdout=outfile, stderr=subprocess.STDOUT)
 
     @staticmethod
-    def get_fastq_from_bam(sample, bam_file, fastq_file, output_folder):
-        read_dict = dict()
-        with pysam.AlignmentFile(bam_file, 'rb') as f:
-            for read in f.fetch():
-                read_name = read.qname
-                read_dict[read_name] = ''  # push reads into dict to avoid duplicates
-                # if read_name not in read_dict:
-                #     read_dict[read_name] = ''  # push reads into dict to avoid duplicates
+    def extract_primer_positions(sam_file):
+        print('Extrat position primer...')
+        primer_positions = {}
 
-        extracted_fastq = output_folder + sample + '.fastq.gz'
+        with open(sam_file, 'r') as file:
+            for line in file:
+                # Ignorer les lignes d'en-tête
+                if line.startswith('@') or line.startswith('['):
+                    continue
 
-        # Parse fastq file to dictionary
-        line_counter = 0
-        with gzip.open(extracted_fastq, 'wb') as out_fh:
-            with gzip.open(fastq_file, 'rt') if fastq_file.endswith('.gz') else open(fastq_file, 'r') as f:
-                fastq_entry = list()
-                for line in f:
-                    line_counter += 1
-                    fastq_entry.append(line)
-                    if line_counter == 4:  # last line of fastq entry
+                # Séparer la ligne en colonnes
+                columns = line.strip().split('\t')
+                read_id = columns[0]  # ID de la lecture
+                flag = int(columns[1])  # Flag de la lecture
+                reference_name = columns[2]  # Nom de la séquence de référence
+                position = columns[3]  # Position d'alignement
 
-                        # Ditch the leading "@" and everything after 1st space
-                        seq_id = fastq_entry[0].split()[0][1:]
+                # Vérifier si la lecture est alignée (flag != 4)
+                if flag != 4:
+                    # Ajouter l'ID de lecture et la position au dictionnaire
+                    primer_positions[read_id] = int(position)
+                else:
+                    primer_positions[read_id] = '*'
 
-                        # Write to
-                        if seq_id in read_dict:
-                            out_fh.write(''.join(fastq_entry).encode('ascii'))
-
-                        # Prepare for new fastq entry
-                        line_counter = 0
-                        fastq_entry = list()
-
+        return primer_positions
+    
     @staticmethod
-    def gzipped_file_size(gzipped_file):
-        with gzip.open(gzipped_file, 'rb') as f:
-            return f.seek(0, whence=2)
+    def write_result(data,output):
+        print('Creation of result file...')
 
-    @staticmethod
-    def run_minimap2(sample, ref, fastq_file, cpu, output_folder, keep_bam):
-        print('\t{}'.format(sample))
+        Methods.make_folder(output)
 
-        output_bam = output_folder + sample + '.bam'
-
-        minimap2_cmd = ['minimap2',
-                        '-a',
-                        '-x', 'map-ont',
-                        '-t', str(cpu),
-                        '--MD',
-                        '--secondary=no',
-                        ref,
-                        fastq_file]
-        samtools_view_cmd = ['samtools', 'view',
-                             '-@', str(cpu),
-                             '-F', '4', '-h',
-                             '-T', ref,
-                             '-']
-        samtools_sort_cmd = ['samtools', 'sort',
-                             '-@', str(cpu),
-                             '--reference', ref,
-                             '-']
-        samtools_markdup_cmd = ['samtools', 'markdup',
-                                '-r',
-                                '-@', str(cpu),
-                                '-',
-                                output_bam]
-        # samtools can only index chromosomes up to 512M bp.
-        samtools_index_cmd = ['samtools', 'index',
-                              output_bam]
-
-        p1 = subprocess.Popen(minimap2_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        p2 = subprocess.Popen(samtools_view_cmd, stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        p1.stdout.close()
-        p3 = subprocess.Popen(samtools_sort_cmd, stdin=p2.stdout, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        p2.stdout.close()
-        p4 = subprocess.Popen(samtools_markdup_cmd, stdin=p3.stdout, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        p3.stdout.close()
-        p4.communicate()
-
-        # Index bam file
-        if os.path.exists(output_bam):
-            if os.stat(output_bam).st_size != 0:  # bam file exists and not empty
-                subprocess.run(samtools_index_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-
-                # Convert bam to fastq
-                Methods.get_fastq_from_bam(sample, output_bam, fastq_file, output_folder)
-
-                # Remove bam
-                if not keep_bam:
-                    bam_list = glob(output_folder + '*.bam*')
-                    for bam in bam_list:
-                        os.remove(bam)
-        else:
-            warnings.warn('No reads were extracted for {}!'.format(sample))
-
-    @staticmethod
-    def run_minimap2_parallel(output_folder, ref, sample_dict, cpu, parallel, keep_bam):
-        Methods.make_folder(output_folder)
-
-        with futures.ThreadPoolExecutor(max_workers=int(parallel)) as executor:
-            args = ((sample, ref, path, int(cpu / parallel), output_folder, keep_bam)
-                    for sample, path in sample_dict.items())
-            for results in executor.map(lambda x: Methods.run_minimap2(*x), args):
-                pass
+        grouped_data = {}
+        for key, value in data.items():
+            primer = key[:-2]  # Supprime '_l' ou '_r' pour obtenir le primer
+            if primer not in grouped_data:
+                grouped_data[primer] = []
+            grouped_data[primer].append(value)
+        with open(f'{output}/output.txt', 'w') as f:
+            for primer, positions in grouped_data.items():
+                f.write(f"{primer}\t{'\t'.join(map(str, positions))}\n")
