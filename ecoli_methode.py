@@ -22,10 +22,6 @@ class Methods(object):
 
     @staticmethod
     def check_input(my_input):
-        error_message_list = ['Please provide a folder as input.',
-                              'The input folder provided does not exist.',
-                              'Make sure files in input folder end with {}'.format(Methods.accepted_extensions)]
-
         if not os.path.exists(my_input):
             raise Exception('Please select an existing file or folder as input.')
 
@@ -77,34 +73,6 @@ class Methods(object):
         return requested_mem
 
     @staticmethod
-    def check_version(log_file):
-        # Not being used right now because versions are captured in the requirements.txt file
-        with open(log_file, 'w') as f:
-            # Python
-            p = subprocess.Popen(['python', '--version'])
-            stderr, stdout = p.communicate()
-
-            # Porechop
-            p = subprocess.Popen(['porechop', '--version'])
-            stderr, stdout = p.communicate()
-
-            # bbmap suite
-            p = subprocess.Popen(['bbduk.sh', '--version'])
-            stderr, stdout = p.communicate()
-
-            # Filtlong
-            p = subprocess.Popen(['filtlong', '--version'])
-            stderr, stdout = p.communicate()
-
-            # SAMtools
-            p = subprocess.Popen(['samtools', '--version'])
-            stderr, stdout = p.communicate()
-
-            # Minimap2
-            p = subprocess.Popen(['minimap2', '--version'])
-            stderr, stdout = p.communicate()
-
-    @staticmethod
     def make_folder(folder):
         # Will create parent directories if don't exist and will not return error if already exists
         pathlib.Path(folder).mkdir(parents=True, exist_ok=True)
@@ -136,14 +104,31 @@ class Methods(object):
     def minimap2(genome, primer, output):
         print('minimap2 processing...')
 
-        Methods.make_folder(output)
+        # Crée le dossier de sortie si nécessaire
+        os.makedirs(output, exist_ok=True)
 
-        # Prépare la commande sans redirection et sans shlex
-        minimap_cmd = ['minimap2', '-ax', 'map-ont', genome, primer]
+        # Prépare la commande sans redirection
+        #minimap_cmd = ['minimap2', '-ax', 'map-ont', genome, primer]
 
-        # Redirection de la sortie vers un fichier
-        with open(f'{output}/output.sam', 'w') as outfile:
-            subprocess.run(minimap_cmd, stdout=outfile, stderr=subprocess.STDOUT)
+        #BWA_index_cmd = ['bwa', 'index', genome]
+        #subprocess.run(BWA_index_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+
+        #BWA_cmd = ['bwa', 'mem', genome, primer]
+        #with open(f'{output}/output.sam', 'w') as outfile, open(os.devnull, 'w') as errfile:
+        #    subprocess.run(BWA_cmd, stdout=outfile, stderr=errfile)
+
+        # Commande pour indexer le génome
+        index_cmd = ['bowtie2-build', genome, 'genome_index']
+        subprocess.run(index_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+
+        # Commande pour aligner les reads au format FASTA
+        bowtie_cmd = ['bowtie2', '-x', 'genome_index', '-f', primer, '-k', '1', '--no-mixed', '--no-discordant']
+        with open(f'{output}/output.sam', 'w') as outfile, open(os.devnull, 'w') as errfile:
+            subprocess.run(bowtie_cmd, stdout=outfile, stderr=errfile)
+
+        # Redirection de la sortie standard vers un fichier et la sortie d'erreur vers /dev/null
+        #with open(f'{output}/output.sam', 'w') as outfile, open(os.devnull, 'w') as errfile:
+        #    subprocess.run(minimap_cmd, stdout=outfile, stderr=errfile)
 
     @staticmethod
     def extract_primer_positions(sam_file):
@@ -153,7 +138,7 @@ class Methods(object):
         with open(sam_file, 'r') as file:
             for line in file:
                 # Ignorer les lignes d'en-tête
-                if line.startswith('@') or line.startswith('['):
+                if line.startswith('@'):
                     continue
 
                 # Séparer la ligne en colonnes
