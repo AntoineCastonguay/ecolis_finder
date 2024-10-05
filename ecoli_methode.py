@@ -101,34 +101,32 @@ class Methods(object):
             pass
         
     @staticmethod
-    def minimap2(genome, primer, output):
-        print('minimap2 processing...')
+    def alignment(genome, primer, output):
+        print('Alignment processing...')
+
+        file = Methods.list_files_in_folder(primer, 'fa')
+        mon_dict = {}
+
+        for f in file:
+            name_file = os.path.basename(f)
+            name = os.path.splitext(name_file)[0]
+            number = name[-1]
+            base = name[:-1]
+            if base not in mon_dict:
+                mon_dict[base] = {}
+            mon_dict[base][number] = f
 
         # Crée le dossier de sortie si nécessaire
         os.makedirs(output, exist_ok=True)
 
-        # Prépare la commande sans redirection
-        #minimap_cmd = ['minimap2', '-ax', 'map-ont', genome, primer]
+        # Alignment BWA
+        BWA_index_cmd = ['bwa', 'index', genome]
+        subprocess.run(BWA_index_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
-        #BWA_index_cmd = ['bwa', 'index', genome]
-        #subprocess.run(BWA_index_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-
-        #BWA_cmd = ['bwa', 'mem', genome, primer]
-        #with open(f'{output}/output.sam', 'w') as outfile, open(os.devnull, 'w') as errfile:
-        #    subprocess.run(BWA_cmd, stdout=outfile, stderr=errfile)
-
-        # Commande pour indexer le génome
-        index_cmd = ['bowtie2-build', genome, 'genome_index']
-        subprocess.run(index_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-
-        # Commande pour aligner les reads au format FASTA
-        bowtie_cmd = ['bowtie2', '-x', 'genome_index', '-f', primer, '-k', '1', '--no-mixed', '--no-discordant']
-        with open(f'{output}/output.sam', 'w') as outfile, open(os.devnull, 'w') as errfile:
-            subprocess.run(bowtie_cmd, stdout=outfile, stderr=errfile)
-
-        # Redirection de la sortie standard vers un fichier et la sortie d'erreur vers /dev/null
-        #with open(f'{output}/output.sam', 'w') as outfile, open(os.devnull, 'w') as errfile:
-        #    subprocess.run(minimap_cmd, stdout=outfile, stderr=errfile)
+        for key, sub_dict in mon_dict.items():
+            BWA_cmd = ['bwa', 'mem', genome, sub_dict['1'], sub_dict['2']]
+            with open(f'{output}/BWA_output.sam', 'w') as outfile, open(os.devnull, 'w') as errfile:
+                subprocess.run(BWA_cmd, stdout=outfile, stderr=errfile)
 
     @staticmethod
     def extract_primer_positions(sam_file):
@@ -145,15 +143,18 @@ class Methods(object):
                 columns = line.strip().split('\t')
                 read_id = columns[0]  # ID de la lecture
                 flag = int(columns[1])  # Flag de la lecture
-                reference_name = columns[2]  # Nom de la séquence de référence
-                position = columns[3]  # Position d'alignement
+                position = int(columns[3])  # Position d'alignement
+                qualite = columns[5]  #qualité alignment
+                postion_mate = int(columns[7])
+                length = int(columns[8])
+
+                list_var = [position,qualite,postion_mate,length]
 
                 # Vérifier si la lecture est alignée (flag != 4)
-                if flag != 4:
-                    # Ajouter l'ID de lecture et la position au dictionnaire
-                    primer_positions[read_id] = int(position)
-                else:
-                    primer_positions[read_id] = '*'
+                # Ajouter l'ID de lecture et la position au dictionnaire
+                if read_id not in primer_positions:
+                    primer_positions[read_id] = {}
+                primer_positions[read_id][flag] = list_var
 
         return primer_positions
     
@@ -162,13 +163,10 @@ class Methods(object):
         print('Creation of result file...')
 
         Methods.make_folder(output)
-
-        grouped_data = {}
-        for key, value in data.items():
-            primer = key[:-2]  # Supprime '_l' ou '_r' pour obtenir le primer
-            if primer not in grouped_data:
-                grouped_data[primer] = []
-            grouped_data[primer].append(value)
         with open(f'{output}/output.txt', 'w') as f:
-            for primer, positions in grouped_data.items():
-                f.write(f"{primer}\t{'\t'.join(map(str, positions))}\n")
+            for read_id, sub_dict in data.items():
+                for flag, list_var in sub_dict.items():
+                    if flag == 99 or flag == 147:
+                        f.write(f"{read_id}\t{flag}\t{list_var[0]}\t{list_var[2]}\t{list_var[3]}\t{list_var[1]}\n")
+                    else:
+                        f.write(f"{read_id}\t{flag}\t{list_var[0]}\t{list_var[2]}\t{list_var[3]}\t{list_var[1]}\n")

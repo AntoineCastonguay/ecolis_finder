@@ -42,8 +42,8 @@ class Ecoli(object):
         print('\tAll good!')
 
         if not os.path.exists(done_extract):
-            Methods.minimap2(self.ref_genome, self.input, extract_folder)
-            Methods.flag_done(done_extract)
+            Methods.alignment(self.ref_genome, self.input, extract_folder)
+            #Methods.flag_done(done_extract)
         else:
             print('Skipping extract. Already done.')
 
@@ -52,7 +52,7 @@ class Ecoli(object):
         if not os.path.exists(done_result):
             position = Methods.extract_primer_positions(sam_file[0])
             Methods.write_result(position, result_folder)
-            Methods.flag_done(done_result)
+            #Methods.flag_done(done_result)
         else:
             print('Skipping result. Already done.')
 
