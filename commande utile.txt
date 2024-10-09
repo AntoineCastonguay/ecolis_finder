@@ -1,13 +1,14 @@
-## commande utile
+##_commande_utile
 
-# lancer un executable
-chmod +x *.sh
-sudo ./*.sh
+#_lancer_un_executable
+chmod_+x_*.sh
+sudo_./*.sh
 
-sudo bash *.sh
+sudo_bash_*.sh
 
-python3 ecolis_finder/ecoli.py -g ~/Documents/BW25113_KAN_pFG051_pAC017cI.fa -i ~/Documents/primer.fasta -o ~/Documents/output/
-python3 ecolis_finder/ecoli.py -g ~/Documents/BW25113_KAN_pFG051_pAC017cI.fa -i ~/Documents/pr1/ -o ~/Documents/output1/
+python3_ecolis_finder/ecoli.py_-g_~/Documents/BW25113_KAN_pFG051_pAC017cI.fa_-i_~/Documents/primer.fasta_-o_~/Documents/output/
+python3_ecolis_finder/ecoli.py_-g_~/Documents/BW25113_KAN_pFG051_pAC017cI.fa_-i_~/Documents/pr1/_-o_~/Documents/output1/
+python3_ecolis_finder/ecoli.py_-g_~/Documents/BW25113_KAN_pFG051_pAC017cI.fa_-i_~/Documents/pr1/_-e_~/Documents/essentiel_gene.txt_-o_~/Documents/output2/
 
-conda install -c bioconda -c conda-forge pysam
-conda install psutil
+conda_install_-c_bioconda_-c_conda-forge_pysam
+conda_install_psutil
