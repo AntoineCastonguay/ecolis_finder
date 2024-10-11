@@ -13,6 +13,7 @@ class Ecoli(object):
     def __init__(self, args):
         # I/O
         self.input = os.path.abspath(args.input)
+        self.essentiel = os.path.abspath(args.essentiel)
         self.output_folder = os.path.abspath(args.output)
         self.ref_genome = os.path.abspath(args.genome)
 
@@ -41,6 +42,7 @@ class Ecoli(object):
         Methods.make_folder(self.output_folder)
         print('\tAll good!')
 
+        # Extraction
         if not os.path.exists(done_extract):
             Methods.alignment(self.ref_genome, self.input, extract_folder)
             #Methods.flag_done(done_extract)
@@ -49,8 +51,9 @@ class Ecoli(object):
 
         sam_file = Methods.find_sam_files(extract_folder)
 
+        # Manipulation
         if not os.path.exists(done_result):
-            position = Methods.extract_primer_positions(sam_file[0])
+            position = Methods.extract_primer_positions(sam_file[0], self.essentiel)
             Methods.write_result(position, result_folder)
             #Methods.flag_done(done_result)
         else:
@@ -69,6 +72,9 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--input', 
                         required=True, 
                         help='Folder that contains the fasta files or individual fasta file. Mandatory.')
+    parser.add_argument('-e', '--essentiel', 
+                        required=True, 
+                        help='')    
     parser.add_argument('-o', '--output', 
                         required=True, 
                         help='Folder to hold the result files. Mandatory.')

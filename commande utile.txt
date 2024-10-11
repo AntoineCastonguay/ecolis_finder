@@ -9,5 +9,8 @@ sudo bash *.sh
 python3 ecolis_finder/ecoli.py -g ~/Documents/BW25113_KAN_pFG051_pAC017cI.fa -i ~/Documents/primer.fasta -o ~/Documents/output/
 python3 ecolis_finder/ecoli.py -g ~/Documents/BW25113_KAN_pFG051_pAC017cI.fa -i ~/Documents/pr1/ -o ~/Documents/output1/
 
+python3 ~/Documents/ecolis_finder/ecoli.py -g ~/Documents/BW25113_KAN_pFG051_pAC017cI.fa -i ~/Documents/pr1/ -e ~/Documents/essentiel_gene.txt -o ~/Documents/output5/
+
+
 conda install -c bioconda -c conda-forge pysam
 conda install psutil

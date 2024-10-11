@@ -129,9 +129,11 @@ class Methods(object):
                 subprocess.run(BWA_cmd, stdout=outfile, stderr=errfile)
 
     @staticmethod
-    def extract_primer_positions(sam_file):
+    def extract_primer_positions(sam_file, essentiel_file):
         print('Extrat position primer...')
         primer_positions = {}
+        with open(essentiel_file,'r') as file:
+            liste_gene_essentiel = [ligne.strip() for ligne in file]
 
         with open(sam_file, 'r') as file:
             for line in file:
@@ -148,10 +150,13 @@ class Methods(object):
                 postion_mate = int(columns[7])
                 length = int(columns[8])
 
-                list_var = [position,qualite,postion_mate,length]
+                if read_id in liste_gene_essentiel:
+                    essentiel = True
+                else:
+                    essentiel = False
 
-                # Vérifier si la lecture est alignée (flag != 4)
-                # Ajouter l'ID de lecture et la position au dictionnaire
+                list_var = [position,qualite,postion_mate,length, essentiel]
+
                 if read_id not in primer_positions:
                     primer_positions[read_id] = {}
                 primer_positions[read_id][flag] = list_var
@@ -164,9 +169,10 @@ class Methods(object):
 
         Methods.make_folder(output)
         with open(f'{output}/output.txt', 'w') as f:
+            f.write(f"gene\tflag\tfirst_pos\tsecond_pos\tlength\tquality\tessentiel\n")
             for read_id, sub_dict in data.items():
                 for flag, list_var in sub_dict.items():
                     if flag == 99 or flag == 147:
-                        f.write(f"{read_id}\t{flag}\t{list_var[0]}\t{list_var[2]}\t{list_var[3]}\t{list_var[1]}\n")
+                        f.write(f"{read_id}\t{flag}\t{list_var[0]}\t{list_var[2]}\t{list_var[3]}\t{list_var[1]}\t{list_var[4]}\n")
                     else:
-                        f.write(f"{read_id}\t{flag}\t{list_var[0]}\t{list_var[2]}\t{list_var[3]}\t{list_var[1]}\n")
+                        f.write(f"{read_id}\t{flag}\t{list_var[0]}\t{list_var[2]}\t{list_var[3]}\t{list_var[1]}\t{list_var[4]}\n")
