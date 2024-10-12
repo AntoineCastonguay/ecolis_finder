@@ -1,0 +1,28 @@
+Explication :
+
+* Dans le fichier output.txt les colonne sont respectivement : ('gene', 'flag', 'first_pos', 'second_pos', 'length', 'quality', 'essentiel')
+    - gene = c'est la combinaison entre ECK number + JW id, car dans le ECK number il y a des none, donc ajouter le JW id. 
+                Les primer ont 50 nt avec un left primer et un right primer pris dans l'article baba 2006.
+    - flag = c'est le sam flag pour l'alignement des séquences. 
+    - first_pos = position du primer.
+    - second_pos = position du primer pairs-end. 
+    - lenght = la longeur du gene avec primer.
+    - quality = nombre de M = match, de D = deletion, de I = insertion et de S = extrémiter non appariées.
+    - essentiel = est ce qu'il fait partie des genes qui n'ont pas pu etre utiliser pour la collection keio.
+
+* J'ai effectuer un alignement avec bwa mem pairs-end avec les left primer (p1) et les right primer (p2).
+    - Dans cette alignement, il va faire un alignement avec le left primer et un alignement avec le right primer. 
+    C'est pourquoi il y a deux entré par gêne et c'est aussi pourquoi il y a des distance négative, 
+    car il prend le right primer comme reférence et fait la distance à l'envers. 
+
+* Il y a 10 gene dont la longueur est aberente > 100 000 nt dont 3 presume essentiel.
+
+* Les bon flag sam : 99 + 147 et 83 + 163, car ils sont read mapped in proper pair. 99% des flag 4246/4288
+* Les flag embigu : 65 + 129, 81 + 161 et 97 + 145, car ils ont un gene > 3550 nt inclus les pairs aberentes > 100 000 nt. 39/4288.
+* Les flag problématique : 113 + 177 problematique puisque aligné sur le même brin. 3/4288.
+
+* 26 donc la qualite n'est pas 50M sur 8576 primer (4288 gene). Ils son tous sur un gene différent. Il y en a 25 non-essentiel et 1 presume essentiel.
+
+* Il y a 102 gene dont le primer chevauche au moin 50 nt sur le gene voisin. Le maximun retrouver c'est 513 nt.
+* Il y a 1554 gene dont le primer chevauche >0 nt sur le gene voisin.
+
