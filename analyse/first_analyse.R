@@ -11,9 +11,6 @@ for (i in 1:nrow(ecoli_BW25113)) {
 }
 ecoli_BW25113 <- cbind(ecoli_BW25113, length = gene_length)
 
-colnames(ecoli) <- c('gene', 'flag', 'first_pos', 'second_pos', 'length', 'quality', 'essentiel')
-# second_pos = position de la pairs
-
 ecoli$first_pos <- ifelse(ecoli$flag == 99, ecoli$first_pos + 47,
        ifelse(ecoli$flag == 147, ecoli$first_pos + 20, ecoli$first_pos))
 
