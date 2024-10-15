@@ -17,6 +17,16 @@ ecoli$first_pos <- ifelse(ecoli$flag == 99, ecoli$first_pos + 47,
 ecoli$second_pos <- ifelse(ecoli$flag == 99, ecoli$second_pos + 20,
                           ifelse(ecoli$flag == 147, ecoli$second_pos + 47, ecoli$second_pos))
 
+nb_none <- sum(ecoli$gene == "none")
+
+for (i in 1:nrow(ecoli)) {
+  if (ecoli$length[i] > 0) {
+    ecoli$length[i] = ecoli$length[i] - 77
+  }else{
+    ecoli$length[i] = ecoli$length[i] + 77
+  }
+}
+
 huge_gene <- subset(ecoli,ecoli$length > 100000)
 # Il y a 10 gene dont la longueur est aberente dont 3 presume essentiel.
 
@@ -77,15 +87,56 @@ chevauchement_gene_50 <- subset(ecoli_positif,ecoli_positif$chevauchement >= 50)
 
 correspondance_l <- c()
 correspondance_r <- c()
+c_l <- c()
+c_r <- c()
+c_diff_l <- c()
+c_diff_r <- c()
 for (i in 1:nrow(ecoli_positif)) {
   res <- ecoli_positif$first_pos[i] %in% ecoli_BW25113$Left.End.Position
   res2 <- ecoli_positif$second_pos[i] %in% ecoli_BW25113$Right.End.Position
   correspondance_l <- append(correspondance_l, res)
   correspondance_r <- append(correspondance_r, res2)
 
+  if (ecoli_positif$gene[i] != 'none') {
+    result <- subset(ecoli_BW25113, Gene_Name == ecoli_positif$gene[i])
+    if (nrow(result) == 1){
+      if(ecoli_positif$first_pos[i] == result$Left.End.Position){
+        c_l <- append(c_l,'T')
+        c_diff_l <- append(c_diff_l,NA)
+      }else{
+        c_l <- append(c_l,result$Left.End.Position)
+        c_diff_l <- append(c_diff_l, ecoli_positif$first_pos[i] - result$Left.End.Position)
+      }
+      
+      if(ecoli_positif$second_pos[i] == result$Right.End.Position){
+        c_r <- append(c_r,'T')
+        c_diff_r <- append(c_diff_r,NA)
+      }else{
+        c_r <- append(c_r,result$Right.End.Position)
+        c_diff_r <- append(c_diff_r, ecoli_positif$second_pos[i] - result$Right.End.Position)
+      }
+    }else if(nrow(result) == 0){
+      c_l <- append(c_l,NA)
+      c_diff_l <- append(c_diff_l,NA)
+      c_r <- append(c_r,NA)
+      c_diff_r <- append(c_diff_r,NA)
+    }else{
+      c_l <- append(c_l,'>2')
+      c_diff_l <- append(c_diff_l,NA)
+      c_r <- append(c_r,'>2')
+      c_diff_r <- append(c_diff_r,NA)
+    }
+  }else{
+    c_l <- append(c_l,NA)
+    c_diff_l <- append(c_diff_l,NA)
+    c_r <- append(c_r,NA)
+    c_diff_r <- append(c_diff_r,NA)
+  }
 
 }
-ecoli_positif <- cbind(ecoli_positif, correspondance_l = correspondance_l, correspondance_r = correspondance_r)
+ecoli_positif <- cbind(ecoli_positif, correspondance_l = correspondance_l, c_gene_l = c_l, c_diff_l = c_diff_l, correspondance_r = correspondance_r, c_gene_r = c_r,c_diff_r=c_diff_r)
 
 table(ecoli_positif$correspondance_r)
 table(ecoli_positif$correspondance_l)
+
+ecoli_positif_first <- ecoli_positif[,c('id','gene','first_pos','correspondance_l','c_gene_l','c_diff_l','second_pos','correspondance_r','c_gene_r','c_diff_r')]
