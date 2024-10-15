@@ -1,6 +1,16 @@
 ecoli <- read.table("~/Documents/output3/2_result/output.txt", header = T)
 ecoli_BW25113 <- read.table("~/Documents/Ecoli_R/All-genes-of-E.-coli-K-12-substr.-BW25113.txt", header = T)
 
+ecoli_BW25113 <- ecoli_BW25113[order(ecoli_BW25113$Left.End.Position),1:4]
+rownames(ecoli_BW25113) <- 1:nrow(ecoli_BW25113)
+
+gene_length <- c()
+for (i in 1:nrow(ecoli_BW25113)) {
+  res = ecoli_BW25113$Right.End.Position[i] - ecoli_BW25113$Left.End.Position[i]
+  gene_length <- append(gene_length, res)
+}
+ecoli_BW25113 <- cbind(ecoli_BW25113, length = gene_length)
+
 colnames(ecoli) <- c('gene', 'flag', 'first_pos', 'second_pos', 'length', 'quality', 'essentiel')
 # second_pos = position de la pairs
 
@@ -10,13 +20,12 @@ ecoli$first_pos <- ifelse(ecoli$flag == 99, ecoli$first_pos + 47,
 ecoli$second_pos <- ifelse(ecoli$flag == 99, ecoli$second_pos + 20,
                           ifelse(ecoli$flag == 147, ecoli$second_pos + 47, ecoli$second_pos))
 
-huge_gene <- subset(ecoli,abs(ecoli$length) > 100000)
+huge_gene <- subset(ecoli,ecoli$length > 100000)
 # Il y a 10 gene dont la longueur est aberente dont 3 presume essentiel.
 
 other_flag <- subset(ecoli, ecoli$flag %in% c(65, 129, 81, 161, 97, 145, 113, 177))
 good_flag <- subset(ecoli, ecoli$flag %in% c(83,99,147,163))
-num_flag <- table(ecoli$flag) 
-num_flag
+num_flag <- table(ecoli$flag)
 
 # Les flag
 # Mapped within the insert size and in correct orientation
@@ -66,13 +75,12 @@ for (i in 1:(nrow(ecoli_positif) - 1)) {
 chevauchement <- append(chevauchement,0)
 ecoli_positif <- cbind(ecoli_positif, chevauchement = chevauchement)
 
-chevauchement_gene_0 <- subset(ecoli_positif,ecoli_positif$chevauchement1 > 0)
-chevauchement_gene_50 <- subset(ecoli_positif,ecoli_positif$chevauchement1 >= 50)
+chevauchement_gene_0 <- subset(ecoli_positif,ecoli_positif$chevauchement > 0)
+chevauchement_gene_50 <- subset(ecoli_positif,ecoli_positif$chevauchement >= 50)
 
 correspondance_l <- c()
 correspondance_r <- c()
 for (i in 1:nrow(ecoli_positif)) {
-  print(ecoli_positif$first_pos[i])
   res <- ecoli_positif$first_pos[i] %in% ecoli_BW25113$Left.End.Position
   res2 <- ecoli_positif$second_pos[i] %in% ecoli_BW25113$Right.End.Position
   correspondance_l <- append(correspondance_l, res)
@@ -83,3 +91,4 @@ for (i in 1:nrow(ecoli_positif)) {
 ecoli_positif <- cbind(ecoli_positif, correspondance_l = correspondance_l, correspondance_r = correspondance_r)
 
 table(ecoli_positif$correspondance_r)
+table(ecoli_positif$correspondance_l)
