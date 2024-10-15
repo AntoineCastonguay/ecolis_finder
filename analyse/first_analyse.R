@@ -1,5 +1,5 @@
-ecoli <- read.table("~/Documents/output3/2_result/output.txt", header = T)
-ecoli_BW25113 <- read.table("~/Documents/Ecoli_R/All-genes-of-E.-coli-K-12-substr.-BW25113.txt", header = T)
+ecoli <- read.table("~/Documents/ecolis_finder/analyse/output.txt", header = T)
+ecoli_BW25113 <- read.table("~/Documents/ecolis_finder/data/All-genes-of-E.-coli-K-12-substr.-BW25113.txt", header = T)
 
 ecoli_BW25113 <- ecoli_BW25113[order(ecoli_BW25113$Left.End.Position),1:4]
 rownames(ecoli_BW25113) <- 1:nrow(ecoli_BW25113)
