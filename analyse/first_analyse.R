@@ -1,5 +1,5 @@
-ecoli <- read.table("~/Documents/ecolis_finder/analyse/output.txt", header = T)
-ecoli_BW25113 <- read.table("~/Documents/ecolis_finder/data/All-genes-of-E.-coli-K-12-substr.-BW25113.txt", header = T)
+ecoli <- read.table("analyse/output.txt", header = T)
+ecoli_BW25113 <- read.table("data/All-genes-of-E.-coli-K-12-substr.-BW25113.txt", header = T)
 
 ecoli_BW25113 <- ecoli_BW25113[order(ecoli_BW25113$Left.End.Position),1:4]
 rownames(ecoli_BW25113) <- 1:nrow(ecoli_BW25113)
@@ -136,7 +136,7 @@ for (i in 1:nrow(ecoli_positif)) {
 }
 ecoli_positif <- cbind(ecoli_positif, correspondance_l = correspondance_l, c_gene_l = c_l, c_diff_l = c_diff_l, correspondance_r = correspondance_r, c_gene_r = c_r,c_diff_r=c_diff_r)
 
-table(ecoli_positif$correspondance_r)
 table(ecoli_positif$correspondance_l)
+table(ecoli_positif$correspondance_r)
 
 ecoli_positif_first <- ecoli_positif[,c('id','gene','first_pos','correspondance_l','c_gene_l','c_diff_l','second_pos','correspondance_r','c_gene_r','c_diff_r')]
