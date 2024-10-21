@@ -11,18 +11,16 @@ for (i in 1:nrow(ecoli_BW25113)) {
 }
 ecoli_BW25113 <- cbind(ecoli_BW25113, length = gene_length)
 
-ecoli$first_pos <- ifelse(ecoli$flag == 99, ecoli$first_pos + 47,
-       ifelse(ecoli$flag == 147, ecoli$first_pos + 20, ecoli$first_pos))
+ecoli$first_pos <- ifelse(ecoli$flag == 99 | 97 | 163 | 161, ecoli$first_pos + 47,
+       ifelse(ecoli$flag == 147 | 145 | 83 | 81, ecoli$first_pos + 20, ecoli$first_pos))
 
-ecoli$second_pos <- ifelse(ecoli$flag == 99, ecoli$second_pos + 20,
-                          ifelse(ecoli$flag == 147, ecoli$second_pos + 47, ecoli$second_pos))
-
-nb_none <- sum(ecoli$gene == "none")
+ecoli$second_pos <- ifelse(ecoli$flag == 99 | 97 | 163 | 161, ecoli$second_pos + 20,
+                          ifelse(ecoli$flag == 147 | 145 | 83 | 81, ecoli$second_pos + 47, ecoli$second_pos))
 
 for (i in 1:nrow(ecoli)) {
   if (ecoli$length[i] > 0) {
     ecoli$length[i] = ecoli$length[i] - 77
-  }else{
+  }else if(ecoli$length[i] < 0){
     ecoli$length[i] = ecoli$length[i] + 77
   }
 }
